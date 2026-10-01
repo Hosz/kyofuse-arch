@@ -1,0 +1,19 @@
+# Environment & Secrets
+.env
+*.env.local
+
+# IDE & Editor files
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Docker local data
+data/

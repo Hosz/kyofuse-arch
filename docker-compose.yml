@@ -1,0 +1,168 @@
+# =============================================================================
+# Kyofuse Architecture — Local Development Infrastructure
+#
+# Services:
+#   postgres     Primary relational database (PostgreSQL 16). Single source of truth.
+#   redis        In-memory store for rate-limiting (ZSet), active presence & distributed locks.
+#   minio        S3-compatible object storage for user avatars, banners and chat media.
+#   minio-init   One-shot initialization container to create default buckets & access policies.
+#   mailpit      Mock SMTP server & web dashboard for transactional emails (activation, 2FA, reset).
+#   prometheus   Time-series metrics scraper (Spring Boot Actuator / Micrometer).
+#   grafana      Dashboard visualizer for system throughput, latency and JVM runtime health.
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — Relational Persistence Engine
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: kyofuse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kyofuse}
+      POSTGRES_USER: ${POSTGRES_USER:-kyofuse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_dev_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - kyofuse_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kyofuse} -d ${POSTGRES_DB:-kyofuse}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - kyofuse-internal
+
+  # ---------------------------------------------------------------------------
+  # Redis — In-Memory High-Speed Cache, Presence & Distributed Concurrency
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:8-alpine
+    container_name: kyofuse-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD:-redis_dev_password}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - kyofuse_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_dev_password}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - kyofuse-internal
+
+  # ---------------------------------------------------------------------------
+  # Mailpit — Mock SMTP Server & Developer Web Inbox
+  # ---------------------------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: kyofuse-mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAIL_PORT:-1025}:1025" # SMTP Port
+      - "8025:8025"               # Web UI Dashboard
+    networks:
+      - kyofuse-internal
+      - kyofuse-public
+
+  # ---------------------------------------------------------------------------
+  # MinIO — S3-Compatible Object Storage
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: kyofuse-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY:-kyofuse_storage_admin}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY:-kyofuse_storage_secret_key_123}
+    ports:
+      - "9000:9000" # S3 API endpoint
+      - "9001:9001" # Web Admin Console
+    volumes:
+      - kyofuse_minio_data:/data
+    networks:
+      - kyofuse-internal
+      - kyofuse-public
+
+  # ---------------------------------------------------------------------------
+  # MinIO Provisioner — Automated Bucket Creation & Anonymous Download Policy
+  # ---------------------------------------------------------------------------
+  minio-init:
+    image: minio/mc:latest
+    container_name: kyofuse-minio-init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 2;
+      /usr/bin/mc alias set myminio http://minio:9000 ${STORAGE_ACCESS_KEY:-kyofuse_storage_admin} ${STORAGE_SECRET_KEY:-kyofuse_storage_secret_key_123};
+      /usr/bin/mc mb myminio/${STORAGE_BUCKET:-kyofuse-media} --ignore-existing;
+      /usr/bin/mc anonymous set download myminio/${STORAGE_BUCKET:-kyofuse-media};
+      exit 0;
+      "
+    networks:
+      - kyofuse-internal
+
+  # ---------------------------------------------------------------------------
+  # Prometheus — Metrics Collection & Scraping
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: kyofuse-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - kyofuse_prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - kyofuse-internal
+
+  # ---------------------------------------------------------------------------
+  # Grafana — Visual Dashboarding & Observability
+  # ---------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:latest
+    container_name: kyofuse-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - kyofuse_grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    networks:
+      - kyofuse-internal
+      - kyofuse-public
+
+networks:
+  kyofuse-internal:
+    name: kyofuse-internal
+    driver: bridge
+  kyofuse-public:
+    name: kyofuse-public
+    driver: bridge
+
+volumes:
+  kyofuse_postgres_data:
+  kyofuse_redis_data:
+  kyofuse_minio_data:
+  kyofuse_prometheus_data:
+  kyofuse_grafana_data:
