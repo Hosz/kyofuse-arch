@@ -571,7 +571,7 @@ A estabilidade da arquitetura é respaldada por uma suíte rigorosa de **mais de
 
 ## 👨‍💻 Autor & Contato
 
-Desenvolvido por **Gabriel (hokyozu)** — Engenheiro de Software focado no ecossistema Java, Spring Boot, Sistemas Distribuídos e Arquitetura de Software.
+Desenvolvido por **Murilo Henrique (Hokyozu)** — Engenheiro de Software focado no ecossistema Java, Spring Boot, Sistemas Distribuídos e Arquitetura de Software.
 
 - **GitHub:** [@Hosz](https://github.com/Hosz)
-- **LinkedIn:** [Gabriel no LinkedIn](https://www.linkedin.com/in/gabriel-kyofuse)
+- **LinkedIn:** [Meu LinkedIn](https://www.linkedin.com/in/murilo-henrique2004)
