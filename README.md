@@ -497,35 +497,6 @@ O arquivo [`docker-compose.yml`](file:///home/hokyozu/Documentos/Dev/kyofuse-arc
 | **`prometheus`** | `prom/prometheus:latest` | `9090` | Coletor de métricas que raspa periodicamente `/actuator/prometheus`. |
 | **`grafana`** | `grafana/grafana:latest` | `3000` | Dashboards pré-provisionados com datasource Prometheus integrado. |
 
-### Passo a Passo de Execução:
-
-1. **Clone o repositório e acesse a raiz:**
-   ```bash
-   git clone https://github.com/Hosz/kyofuse-arch.git
-   cd kyofuse-arch
-   ```
-
-2. **Crie o arquivo de variáveis de ambiente a partir do modelo:**
-   ```bash
-   cp .env.example .env
-   ```
-
-3. **Inicie os serviços de infraestrutura:**
-   ```bash
-   docker compose up -d
-   ```
-
-4. **Verifique o status de saúde dos contêineres:**
-   ```bash
-   docker compose ps
-   ```
-
-5. **Acesse as interfaces administrativas:**
-   - **Mailpit (Painel de Emails):** [http://localhost:8025](http://localhost:8025)
-   - **MinIO Console (S3 Storage):** [http://localhost:9001](http://localhost:9001) *(User: `kyofuse_storage_admin`, Pass: `kyofuse_storage_secret_key_123`)*
-   - **Grafana (Dashboards):** [http://localhost:3000](http://localhost:3000) *(User: `admin`, Pass: `admin`)*
-   - **Prometheus (Métricas brutas):** [http://localhost:9090](http://localhost:9090)
-
 ---
 
 ## 🧪 Qualidade e Testes Automatizados
