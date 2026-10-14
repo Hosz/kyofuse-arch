@@ -13,6 +13,7 @@
 [![Docker Compose](https://img.shields.io/badge/Docker-Compose%20v2-2496ED.svg?logo=docker)](https://www.docker.com/)
 [![Tests: 167+ Classes](https://img.shields.io/badge/Tests-167%2B%20Classes%20(JUnit%205%20%2B%20Mockito)-success.svg)](https://junit.org/)
 [![Observability](https://img.shields.io/badge/Observability-Prometheus%20%2B%20Grafana-F46800.svg?logo=prometheus)](https://prometheus.io/)
+[![Ko-fi: Support](https://img.shields.io/badge/Ko--fi-Support-FF5E5B.svg?logo=ko-fi)](https://ko-fi.com/murilo_marques)
 
 **Estudo de Caso Técnico e Arquitetura de Software: Plataforma Social e Hub Competitivo de Baixa Latência**
 
@@ -546,3 +547,4 @@ Desenvolvido por **Murilo Henrique (Hokyozu)** — Engenheiro de Software focado
 
 - **GitHub:** [@Hosz](https://github.com/Hosz)
 - **LinkedIn:** [Meu LinkedIn](https://www.linkedin.com/in/murilo-henrique2004)
+- **Ko-fi:** [Apoie o projeto no Ko-fi](https://ko-fi.com/murilo_marques)
